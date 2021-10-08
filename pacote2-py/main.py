@@ -16,10 +16,12 @@ INPUT_IMAGE =  'arroz.bmp'
 
 # TODO: ajuste estes parâmetros!
 NEGATIVO = False
-THRESHOLD = 0.4
+THRESHOLD = 0.8
 ALTURA_MIN = 1
 LARGURA_MIN = 1
 N_PIXELS_MIN = 1
+
+sys.setrecursionlimit(1500)
 
 #===============================================================================
 
@@ -32,9 +34,7 @@ Parâmetros: img: imagem de entrada. Se tiver mais que 1 canal, binariza cada
             
 Valor de retorno: versão binarizada da img_in.'''
 
-    # TODO: escreva o código desta função.
-    # Dica/desafio: usando a função np.where, dá para fazer a binarização muito
-    # rapidamente, e com apenas uma linha de código!
+    return np.where(img < THRESHOLD, 0, 1)
 
 #-------------------------------------------------------------------------------
 
@@ -58,6 +58,65 @@ respectivamente: topo, esquerda, baixo e direita.'''
     # TODO: escreva esta função.
     # Use a abordagem com flood fill recursivo.
 
+    component_count = 1
+    components = []
+
+    check_matrix = np.zeros(img.shape)
+
+    def flood(x, y, component):
+        # print('aaaaaa')
+        # print(img.shape)
+        if(x < 0 or y < 0 or x > img.shape[0] - 1 or y > img.shape[1] - 1):
+            return None
+
+        if(img[x][y][0] == 0 or check_matrix[x][y][0] == 1):
+            return None
+
+        check_matrix[x][y][0] = 1
+        component['n_pixels'] += 1
+
+        if(component['B'] is None or x > component['B']):
+            component['B'] = x
+        
+        if(component['T'] is None or x < component['T']):
+            component['T'] = x
+
+        if(component['L'] is None or y < component['L']):
+            component['L'] = y
+
+        if(component['R'] is None or y > component['R']):
+            component['R'] = y
+
+        flood(x+1, y, component)
+        flood(x-1, y, component)
+        flood(x, y+1, component)
+        flood(x, y-1, component)
+
+        return None
+
+    for x in range(0, img.shape[0]):
+        for y in range(0, img.shape[1]):
+
+            if(check_matrix[x][y][0] == 1):
+                continue
+
+            if(img[x][y][0] == 1):
+                component = {
+                    'label': component_count,
+                    'n_pixels': 0,
+                    'T': None,
+                    'L': None,
+                    'B': None,
+                    'R': None
+                }
+                flood(x, y, component)
+                components.append(component)
+                component_count += 1
+    
+    print(components)        
+
+    return list(filter(lambda component: component['n_pixels'] > n_pixels_min, components))
+
 #===============================================================================
 
 def main ():
@@ -80,11 +139,12 @@ def main ():
     if NEGATIVO:
         img = 1 - img
     img = binariza (img, THRESHOLD)
-    cv2.imshow ('01 - binarizada', img)
+    # cv2.imshow ('01 - binarizada', img)
     cv2.imwrite ('01 - binarizada.png', img*255)
 
     start_time = timeit.default_timer ()
     componentes = rotula (img, LARGURA_MIN, ALTURA_MIN, N_PIXELS_MIN)
+    print(componentes)
     n_componentes = len (componentes)
     print ('Tempo: %f' % (timeit.default_timer () - start_time))
     print ('%d componentes detectados.' % n_componentes)
@@ -93,7 +153,7 @@ def main ():
     for c in componentes:
         cv2.rectangle (img_out, (c ['L'], c ['T']), (c ['R'], c ['B']), (0,0,1))
 
-    cv2.imshow ('02 - out', img_out)
+    # cv2.imshow ('02 - out', img_out)
     cv2.imwrite ('02 - out.png', img_out*255)
     cv2.waitKey ()
     cv2.destroyAllWindows ()
