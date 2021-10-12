@@ -14,7 +14,6 @@ import cv2
 
 INPUT_IMAGE =  'arroz.bmp'
 
-# TODO: ajuste estes parâmetros!
 NEGATIVO = False
 THRESHOLD = 0.8
 ALTURA_MIN = 1
@@ -55,7 +54,6 @@ com os seguintes campos:
 'T', 'L', 'B', 'R': coordenadas do retângulo envolvente de um componente conexo,
 respectivamente: topo, esquerda, baixo e direita.'''
 
-    # TODO: escreva esta função.
     # Use a abordagem com flood fill recursivo.
 
     component_count = 1
@@ -64,8 +62,6 @@ respectivamente: topo, esquerda, baixo e direita.'''
     check_matrix = np.zeros(img.shape)
 
     def flood(x, y, component):
-        # print('aaaaaa')
-        # print(img.shape)
         if(x < 0 or y < 0 or x > img.shape[0] - 1 or y > img.shape[1] - 1):
             return None
 
