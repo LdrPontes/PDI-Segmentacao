@@ -5,15 +5,15 @@ import cv2
 import math
 
 INPUT_IMAGE = './Exemplos/b01.bmp'
-WINDOW_SIZE_X = 7
-WINDOW_SIZE_Y = 7
+WINDOW_SIZE_X = 15
+WINDOW_SIZE_Y = 11
 
 '''
 1 = INGẼNUO
 2 = SEPARÁVEL
 3 = IMAGEM INTEGRAL
 '''
-METHOD = 1
+METHOD = 2
 
 def dumb_window_mean(window):
 
@@ -50,10 +50,47 @@ def dumb(img):
 
     return blured[WINDOW_SIZE_Y:img.shape[0]-WINDOW_SIZE_Y, WINDOW_SIZE_X:img.shape[1]-WINDOW_SIZE_X]
 
-# sla se é isso memso
-def splitable(img):
+def splitable_mean(window, window_size):
+    mean = []
+    
+    for c in range(0, 3):
+        total = 0
+        for i in range(0, window_size):
+            try:
+                total += window[i][c]
+            except Exception as e:
+                print(e)
+                pass
+        channel_mean = total / window_size
+        mean.append(channel_mean)
+    
+    return mean
 
-    return img
+def splitable(img):
+    initial_x = math.floor(WINDOW_SIZE_X / 2)
+    initial_y = math.floor(WINDOW_SIZE_Y / 2)
+    
+    blured_horizontal = np.zeros(img.shape)
+    blured = np.zeros(img.shape)
+
+    for y in range(initial_y, img.shape[0]):
+        for x in range(initial_x, img.shape[1] - initial_x):
+            window = img[y, x-initial_x:x+initial_x + 1]
+            mean = splitable_mean(window, WINDOW_SIZE_X)
+            
+            for channel, value in enumerate(mean):
+                blured_horizontal[y][x][channel] = value
+        
+    for x in range(initial_x, blured_horizontal.shape[1]):  
+        for y in range(initial_y, blured_horizontal.shape[0] - initial_y):
+            window = blured_horizontal[y-initial_y:y+initial_y + 1, x]
+            mean = splitable_mean(window, WINDOW_SIZE_Y)
+                        
+            for channel, value in enumerate(mean):
+                blured[y][x][channel] = value
+    
+    return blured[WINDOW_SIZE_Y:img.shape[0]-WINDOW_SIZE_Y, WINDOW_SIZE_X:img.shape[1]-WINDOW_SIZE_X]
+            
 
 def integral(img):
 
