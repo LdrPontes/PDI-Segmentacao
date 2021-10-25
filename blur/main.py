@@ -5,15 +5,15 @@ import cv2
 import math
 
 INPUT_IMAGE = './Exemplos/b01.bmp'
-WINDOW_SIZE_X = 15
-WINDOW_SIZE_Y = 11
+WINDOW_SIZE_X = 11
+WINDOW_SIZE_Y = 15
 
 '''
 1 = INGẼNUO
 2 = SEPARÁVEL
 3 = IMAGEM INTEGRAL
 '''
-METHOD = 2
+METHOD = 3
 
 def dumb_window_mean(window):
 
@@ -90,11 +90,43 @@ def splitable(img):
                 blured[y][x][channel] = value
     
     return blured[WINDOW_SIZE_Y:img.shape[0]-WINDOW_SIZE_Y, WINDOW_SIZE_X:img.shape[1]-WINDOW_SIZE_X]
-            
+       
 
 def integral(img):
+    initial_x = math.floor(WINDOW_SIZE_X / 2)
+    initial_y = math.floor(WINDOW_SIZE_Y / 2)
 
-    return img
+    integral_img = np.zeros(img.shape)
+    
+    blured = np.zeros(img.shape)
+
+    for c in range(0, 3):
+        for y in range(1, img.shape[0]):
+            for x in range(1, img.shape[1]):
+                try:
+                    integral_img[y][x][c] = img[y][x][c] + integral_img[y-1][x][c] + integral_img[y][x-1][c] - integral_img[y-1][x-1][c]
+                except:
+                    pass
+
+    for y in range(initial_y, integral_img.shape[0] - initial_y):
+        for x in range(initial_x, integral_img.shape[1] - initial_x):
+            for c in range(0, 3):
+                try:
+
+                    top_left = integral_img[y - initial_y][x - initial_x][c]
+                    top_right = integral_img[y - initial_y][x + initial_x][c]
+                    bottom_left = integral_img[y + initial_y][x - initial_x][c] 
+                    bottom_right = integral_img[y + initial_y][x + initial_x][c]
+
+                    window_sum = bottom_right + top_left - top_right - bottom_left
+
+                    mean = window_sum / (WINDOW_SIZE_Y * WINDOW_SIZE_X)
+
+                    blured[y][x][c] = mean
+                except:
+                    pass
+    
+    return blured[WINDOW_SIZE_Y:img.shape[0]-WINDOW_SIZE_Y, WINDOW_SIZE_X:img.shape[1]-WINDOW_SIZE_X]
 
 
 def main():
