@@ -7,6 +7,7 @@ import math
 INPUT_IMAGE = './corrida.bmp'
 THRESHOLD = 0.65
 
+STD_DEVIATION = 2
 
 def bright_pass(original, gray):
 
@@ -20,25 +21,46 @@ def bright_pass(original, gray):
     return result
 
 
-def box_blur(original, brighted):
+def box_blur(original, brighten):
 
     original = original.copy()
-    brighted = brighted.copy()
-    brighted_sum = np.zeros(brighted.shape)
+    brighten = brighten.copy()
+    brighten_sum = np.zeros(brighten.shape)
 
     window_size = [5, 15, 25, 35]
-    # window_size = [20]
+
     for size in window_size:
 
-        blured = cv2.boxFilter(brighted, ddepth=-1, ksize=(size, size))
+        blured = cv2.boxFilter(brighten, ddepth=-1, ksize=(size, size))
 
-        brighted_sum = brighted_sum + blured
+        brighten_sum = brighten_sum + blured
 
     output = np.zeros(original.shape)
-    output = cv2.normalize((0.65 * original) + (0.30 * brighted_sum), output, 0, 255, cv2.NORM_MINMAX)
+    output = cv2.normalize((0.65 * original) + (0.25 * brighten_sum), output, 0, 255, cv2.NORM_MINMAX)
 
     return output
 
+def gaussian_blur(original, brighten):
+    original = original.copy()
+    brighten = brighten.copy()
+    
+    deviation = math.floor(STD_DEVIATION * 3 * math.sqrt(2*math.pi) / 4 + 0.5)
+
+    if(deviation % 2 == 0):
+        blured = cv2.boxFilter(brighten, ddepth=-1, ksize=(deviation, deviation))
+        blured = cv2.boxFilter(blured, ddepth=-1, ksize=(deviation, deviation))
+        blured = cv2.boxFilter(blured, ddepth=-1, ksize=(deviation + 1, deviation + 1))
+
+    else:
+        blured = cv2.boxFilter(brighten, ddepth=-1, ksize=(deviation, deviation))
+        blured = cv2.boxFilter(blured, ddepth=-1, ksize=(deviation, deviation))
+        blured = cv2.boxFilter(blured, ddepth=-1, ksize=(deviation, deviation))
+            
+
+    output = np.zeros(original.shape)
+    output = cv2.normalize((0.65 * original) + (0.25 * blured), output, 0, 255, cv2.NORM_MINMAX)
+
+    return output
 
 def main():
 
@@ -53,7 +75,7 @@ def main():
 
     brighted = bright_pass(img, gray)
 
-    output = box_blur(img, brighted)
+    output = gaussian_blur(img, brighted)
 
     cv2.imwrite('output.png', output)
 
