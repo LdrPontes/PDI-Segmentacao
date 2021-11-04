@@ -1,3 +1,4 @@
+# Alunos: Leandro Pontes Berleze e Otávio Thomas Bertucini
 import sys
 import timeit
 import numpy as np
@@ -41,6 +42,7 @@ def box_blur(original, brighten):
     return output
 
 def gaussian_blur(original, brighten):
+    #Refêrencia: https://www.w3.org/TR/SVG11/filters.html#feGaussianBlurElement
     original = original.copy()
     brighten = brighten.copy()
     
